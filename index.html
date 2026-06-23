@@ -55,8 +55,8 @@
   .hero{ text-align:center; padding:30px 20px 18px; }
   .globe-wrap{ display:grid; place-items:center; }
   canvas.globe{
-    width:clamp(170px,30vw,300px); aspect-ratio:1; height:auto;
-    filter:drop-shadow(0 24px 54px rgba(58,96,180,.42));
+    width:clamp(200px,33vw,340px); aspect-ratio:1; height:auto;
+    filter:drop-shadow(0 26px 58px rgba(58,96,180,.44));
     animation:bob 6s ease-in-out infinite;
   }
   @keyframes bob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
@@ -74,11 +74,10 @@
   /* grid */
   .label{ text-align:center; font-size:10.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--faint); padding:46px 0 26px; }
   .grid{
-    display:grid; grid-template-columns:repeat(3,1fr); gap:18px 14px;
-    max-width:1080px; margin:0 auto; padding:0 22px 30px;
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:30px 22px;
+    max-width:1240px; margin:0 auto; padding:0 28px 44px;
   }
-  @media(max-width:860px){ .grid{grid-template-columns:repeat(2,1fr);} }
-  @media(max-width:520px){ .grid{grid-template-columns:1fr;} }
+  @media(max-width:520px){ .grid{grid-template-columns:1fr; gap:24px;} }
 
   .card{ text-align:center; cursor:pointer; padding:14px 10px 22px; border-radius:18px; transition:background .25s; }
   .card:hover{ background:rgba(255,255,255,.5); }
