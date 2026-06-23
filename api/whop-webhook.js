@@ -29,9 +29,7 @@ export default async function handler(req, res) {
   const o = event.data || {};
   // ↓↓↓ confirm these paths against one real payload, then lock them in ↓↓↓
   const paymentId = o.id;
-  const planId = o.plan_id || o.plan?.id;
-  const size = (o.custom_field_responses || o.custom_fields || [])
-    .find(f => /size/i.test(f.name || f.question || ""))?.value || o.metadata?.size || "M";
+  const planId = o.plan_id || o.plan?.id;   // size is implied by the plan (PLAN_MAP)
   const s = o.shipping_address || o.address || {};
   const address = {
     first_name: s.first_name || o.name?.split(" ")[0] || "Customer",
@@ -43,7 +41,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    const r = await createPrintifyOrder({ paymentId, planId, size, address });
+    const r = await createPrintifyOrder({ paymentId, planId, address });
     console.log("printify order", r.status, JSON.stringify(r.json).slice(0, 300));
   } catch (e) {
     console.error("fulfillment failed", paymentId, e?.message || e);

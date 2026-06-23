@@ -166,11 +166,11 @@
   <script>
     // ── Whop plan ids (live) ──
     const PRODUCTS = [
-      { key:"usa",       name:"USA Jersey",       flag:"🇺🇸", price:120, plan:"plan_neYQvYQ4fvxHn", img:"kits/usa.jpg" },
-      { key:"mexico",    name:"Mexico Jersey",    flag:"🇲🇽", price:120, plan:"plan_scOsVRtXTjgRP", img:"kits/mexico.jpg" },
-      { key:"argentina", name:"Argentina Jersey", flag:"🇦🇷", price:130, plan:"plan_ULkzKIourRVfS", img:"kits/argentina.jpg" },
-      { key:"brazil",    name:"Brazil Jersey",    flag:"🇧🇷", price:130, plan:"plan_WHztszc1Wy222", img:"kits/brazil.jpg" },
-      { key:"scotland",  name:"Scotland Jersey",  flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", price:110, plan:"plan_c9xhCHIg1nJH4", img:"kits/scotland.jpg" },
+      { key:"usa",       name:"USA Jersey",       flag:"🇺🇸", price:120, img:"kits/usa.jpg",       plans:{S:"plan_RwqDtm0thjiFl",M:"plan_774KWMxHATmEy",L:"plan_V9bnWYbtiRwRv",XL:"plan_bN7186UWdefl8"} },
+      { key:"mexico",    name:"Mexico Jersey",    flag:"🇲🇽", price:120, img:"kits/mexico.jpg",    plans:{S:"plan_H4Z03CPGLWQ6k",M:"plan_NYelmilYTNJ06",L:"plan_U5oQQLyluNqbH",XL:"plan_cFkQeK70zzuHq"} },
+      { key:"argentina", name:"Argentina Jersey", flag:"🇦🇷", price:130, img:"kits/argentina.jpg", plans:{S:"plan_W9JDQdeasCuHF",M:"plan_NKnjQMhLTH45H",L:"plan_9HIgkYWfl7hxf",XL:"plan_cweX30LjxSN7Q"} },
+      { key:"brazil",    name:"Brazil Jersey",    flag:"🇧🇷", price:130, img:"kits/brazil.jpg",    plans:{S:"plan_7AUsYszgOcADK",M:"plan_B5jPc9XFls03f",L:"plan_oM2E9zPLMjcSs",XL:"plan_ge35T7vegEEL1"} },
+      { key:"scotland",  name:"Scotland Jersey",  flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", price:110, img:"kits/scotland.jpg",  plans:{S:"plan_tq87uEy9Rm7oy",M:"plan_RGuVzPWt9Ix1x",L:"plan_h0mvrGZCSkjyr",XL:"plan_PbWsofktsj7dA"} },
     ];
     const SIZES = ["S","M","L","XL"];
     const money = n => "$" + n.toFixed(0);
@@ -197,29 +197,37 @@
     const overlay = document.getElementById("overlay");
     const sheet = document.getElementById("sheet");
 
+    const remount = ()=>{ if(window.whopCheckout?.mount){ try{ window.whopCheckout.mount(); }catch(e){} } };
+    function mountHTML(p, size){
+      const plan = p.plans[size];
+      const hosted = `https://whop.com/checkout/${plan}/`;
+      return `
+        <div data-whop-checkout-plan-id="${plan}"></div>
+        <a class="buy" href="${hosted}" target="_blank" rel="noopener">Checkout · Size ${size} — ${money(p.price)}</a>
+        <p class="note">Size ${size} · ships worldwide. Each size is its own checkout — the embedded form above takes payment + shipping.</p>`;
+    }
     function openSheet(key, size){
       const p = PRODUCTS.find(x=>x.key===key); if(!p) return;
-      size = size || "M";
-      const hosted = `https://whop.com/checkout/${p.plan}/`;
+      size = (size && p.plans[size]) ? size : "M";
       sheet.innerHTML = `
         <button class="x" onclick="closeSheet()">Close ✕</button>
         <div style="clear:both"></div>
         <div class="big"><img class="shot" src="${p.img}" alt="${p.name}"></div>
         <h2>${p.name}</h2>
-        <div class="ssub">Chrome FC · World Cup National Kit</div>
+        <div class="ssub">${p.flag} Chrome FC · World Cup National Kit</div>
         <div class="pr">${money(p.price)}</div>
         <div class="pick" id="pick">${SIZES.map(s=>`<button class="${s===size?'sel':''}" data-s="${s}">${s}</button>`).join("")}</div>
-        <div class="mount">
-          <div data-whop-checkout-plan-id="${p.plan}"></div>
-          <a class="buy" href="${hosted}" target="_blank" rel="noopener">Checkout — ${money(p.price)}</a>
-          <p class="note">Pick your size in the Whop checkout above. Embedded checkout renders live; the button is the hosted fallback.</p>
-        </div>`;
+        <div class="mount" id="mount">${mountHTML(p,size)}</div>`;
       sheet.querySelectorAll("#pick button").forEach(b=>{
-        b.addEventListener("click",()=>{ sheet.querySelectorAll("#pick button").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); });
+        b.addEventListener("click",()=>{
+          sheet.querySelectorAll("#pick button").forEach(x=>x.classList.toggle("sel", x===b));
+          document.getElementById("mount").innerHTML = mountHTML(p, b.dataset.s);
+          remount();
+        });
       });
       overlay.classList.add("open"); document.body.style.overflow="hidden";
       if(history.replaceState) history.replaceState(null,"","#"+key);
-      if(window.whopCheckout?.mount){ try{ window.whopCheckout.mount(); }catch(e){} }
+      remount();
     }
     function closeSheet(){ overlay.classList.remove("open"); document.body.style.overflow=""; if(history.replaceState) history.replaceState(null,"","#"); }
     window.closeSheet = closeSheet;
