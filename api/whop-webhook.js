@@ -24,9 +24,10 @@ export default async function handler(req, res) {
   // ack immediately, fulfill after (Whop retries on non-2xx)
   res.status(200).json({ received: true });
 
-  if (event.type !== "payment.succeeded") return;
+  const type = event.type || event.action || "";   // v1 uses type, v2 uses action
+  if (!/payment\.succeeded/.test(type)) return;
 
-  const o = event.data || {};
+  const o = event.data || event.payment || {};
   // ↓↓↓ confirm these paths against one real payload, then lock them in ↓↓↓
   const paymentId = o.id;
   const planId = o.plan_id || o.plan?.id;   // size is implied by the plan (PLAN_MAP)
