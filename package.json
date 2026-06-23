@@ -1,0 +1,8 @@
+{
+  "name": "chrome-fc",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@whop/sdk": "latest"
+  }
+}
