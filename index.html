@@ -88,8 +88,10 @@
     display:grid; place-items:center; box-shadow:inset 0 0 0 1px rgba(120,120,170,.12);
   }
   .thumb .glow{position:absolute; inset:0; opacity:.18;}
+  .thumb .shot{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .5s ease; }
+  .card:hover .thumb .shot{ transform:scale(1.05); }
+  .sheet .big .shot{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
   .thumb .flag{font-size:clamp(56px,9vw,104px); filter:drop-shadow(0 6px 14px rgba(40,40,90,.25)); transition:transform .4s ease;}
-  .card:hover .thumb .flag{transform:scale(1.07) rotate(-2deg);}
   .thumb .ph{
     position:absolute; top:10px; right:10px; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
     color:var(--faint); background:#fff; border:1px solid var(--line); padding:3px 7px; border-radius:999px;
@@ -165,11 +167,11 @@
   <script>
     // ── Whop plan ids (live) ──
     const PRODUCTS = [
-      { key:"usa",       name:"USA Jersey",       flag:"🇺🇸", price:120, plan:"plan_neYQvYQ4fvxHn", a:"#3c3b6e", b:"#b22234" },
-      { key:"mexico",    name:"Mexico Jersey",    flag:"🇲🇽", price:120, plan:"plan_scOsVRtXTjgRP", a:"#006847", b:"#ce1126" },
-      { key:"argentina", name:"Argentina Jersey", flag:"🇦🇷", price:130, plan:"plan_ULkzKIourRVfS", a:"#74acdf", b:"#ffffff" },
-      { key:"brazil",    name:"Brazil Jersey",    flag:"🇧🇷", price:130, plan:"plan_WHztszc1Wy222", a:"#009b3a", b:"#fedf00" },
-      { key:"scotland",  name:"Scotland Jersey",  flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", price:110, plan:"plan_c9xhCHIg1nJH4", a:"#0065bf", b:"#ffffff" },
+      { key:"usa",       name:"USA Jersey",       flag:"🇺🇸", price:120, plan:"plan_neYQvYQ4fvxHn", img:"kits/usa.jpg" },
+      { key:"mexico",    name:"Mexico Jersey",    flag:"🇲🇽", price:120, plan:"plan_scOsVRtXTjgRP", img:"kits/mexico.jpg" },
+      { key:"argentina", name:"Argentina Jersey", flag:"🇦🇷", price:130, plan:"plan_ULkzKIourRVfS", img:"kits/argentina.jpg" },
+      { key:"brazil",    name:"Brazil Jersey",    flag:"🇧🇷", price:130, plan:"plan_WHztszc1Wy222", img:"kits/brazil.jpg" },
+      { key:"scotland",  name:"Scotland Jersey",  flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", price:110, plan:"plan_c9xhCHIg1nJH4", img:"kits/scotland.jpg" },
     ];
     const SIZES = ["S","M","L","XL"];
     const money = n => "$" + n.toFixed(0);
@@ -180,12 +182,10 @@
       el.className = "card";
       el.innerHTML = `
         <div class="thumb">
-          <div class="glow" style="background:linear-gradient(135deg,${p.a},${p.b})"></div>
-          <div class="ph">Add design</div>
-          <div class="flag">${p.flag}</div>
+          <img class="shot" src="${p.img}" alt="${p.name}" loading="lazy">
         </div>
         <div class="name">${p.name}</div>
-        <div class="sub">Chrome FC · National Kit</div>
+        <div class="sub">${p.flag} Chrome FC · National Kit</div>
         <div class="price">${money(p.price)}</div>
         <div class="sizes">${SIZES.map(s=>`<span data-s="${s}">${s}</span>`).join("")}</div>`;
       el.querySelectorAll(".sizes span").forEach(s=>{
@@ -205,7 +205,7 @@
       sheet.innerHTML = `
         <button class="x" onclick="closeSheet()">Close ✕</button>
         <div style="clear:both"></div>
-        <div class="big"><div class="glow" style="position:absolute;inset:0;opacity:.16;background:linear-gradient(135deg,${p.a},${p.b})"></div><div class="flag">${p.flag}</div></div>
+        <div class="big"><img class="shot" src="${p.img}" alt="${p.name}"></div>
         <h2>${p.name}</h2>
         <div class="ssub">Chrome FC · World Cup National Kit</div>
         <div class="pr">${money(p.price)}</div>
