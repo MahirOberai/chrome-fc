@@ -53,39 +53,14 @@
 
   /* hero + globe */
   .hero{ text-align:center; padding:30px 20px 18px; }
-  .globe-wrap{ display:grid; place-items:center; perspective:700px; }
-  .globe{
-    width:clamp(150px,26vw,250px); aspect-ratio:1; border-radius:50%; position:relative;
-    overflow:hidden; isolation:isolate;
-    background:radial-gradient(circle at 33% 27%, #f0f6ff 0%, #b7d2f4 18%, #6ea0e0 44%, #3568b8 70%, #16356f 100%);
-    box-shadow:
-      inset -16px -20px 44px rgba(8,22,60,.6),
-      inset 12px 14px 30px rgba(255,255,255,.55),
-      0 22px 60px rgba(58,96,180,.4);
+  .globe-wrap{ display:grid; place-items:center; }
+  canvas.globe{
+    width:clamp(170px,30vw,300px); aspect-ratio:1; height:auto;
+    filter:drop-shadow(0 24px 54px rgba(58,96,180,.42));
     animation:bob 6s ease-in-out infinite;
   }
-  .globe::before{
-    content:""; position:absolute; inset:0; border-radius:50%;
-    background-image:
-      repeating-linear-gradient(90deg, rgba(225,240,255,.55) 0 1.5px, transparent 1.5px 24px),
-      repeating-linear-gradient(0deg,  rgba(210,232,255,.38) 0 1.5px, transparent 1.5px 24px);
-    -webkit-mask:radial-gradient(circle at 50% 50%, #000 58%, transparent 73%);
-            mask:radial-gradient(circle at 50% 50%, #000 58%, transparent 73%);
-    animation:spin 7s linear infinite;
-  }
-  .globe::after{
-    content:""; position:absolute; inset:0; border-radius:50%;
-    background:radial-gradient(circle at 30% 23%, rgba(255,255,255,.9), rgba(255,255,255,0) 32%);
-    mix-blend-mode:screen; z-index:2;
-  }
-  .ring{
-    position:absolute; inset:-14% ; border-radius:50%;
-    border:1px solid rgba(120,140,210,.4);
-    transform:rotateX(74deg); pointer-events:none;
-  }
-  @keyframes spin{ to{ background-position:-240px 0, 0 0; } }
   @keyframes bob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
-  @media(prefers-reduced-motion:reduce){ .globe,.globe::before{animation:none;} }
+  @media(prefers-reduced-motion:reduce){ canvas.globe{animation:none;} }
 
   .hero h1{
     margin:22px 0 8px; font-size:clamp(30px,7vw,68px); line-height:.95; letter-spacing:-.02em;
@@ -169,7 +144,7 @@
 
   <header class="hero">
     <div class="globe-wrap">
-      <div class="globe"><div class="ring"></div></div>
+      <canvas class="globe" id="globe"></canvas>
     </div>
     <h1>World Cup Kits</h1>
     <p>Football jerseys you can wear in Compton</p>
@@ -253,6 +228,66 @@
     document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeSheet(); });
 
     const h = location.hash.replace("#",""); if(h && PRODUCTS.some(p=>p.key===h)) openSheet(h);
+  </script>
+
+  <!-- real rotating wireframe globe (canvas, orthographic sphere projection) -->
+  <script>
+  (function(){
+    const cv = document.getElementById("globe"); if(!cv) return;
+    const ctx = cv.getContext("2d");
+    let W,H,cx,cy,R;
+    function size(){
+      const dpr = Math.min(window.devicePixelRatio||1, 2);
+      const css = cv.clientWidth || 240;
+      cv.width = css*dpr; cv.height = css*dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      W=css; H=css; cx=W/2; cy=H/2; R=W/2*0.9;
+    }
+    function project(latD, lonD, t){
+      const lat=latD*Math.PI/180, lon=lonD*Math.PI/180 + t;
+      return { x:cx + R*Math.cos(lat)*Math.sin(lon), y:cy - R*Math.sin(lat), z:Math.cos(lat)*Math.cos(lon) };
+    }
+    function lines(t, front, alpha){
+      ctx.lineWidth = 1; ctx.strokeStyle = "rgba(255,255,255,"+alpha+")";
+      for(let lat=-75; lat<=75; lat+=15){            // parallels
+        ctx.beginPath(); let pen=false;
+        for(let lon=0; lon<=360; lon+=3){
+          const p=project(lat,lon,t), vis = front ? p.z>=0 : p.z<0;
+          if(vis){ pen?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y); pen=true; } else pen=false;
+        }
+        ctx.stroke();
+      }
+      for(let lon=0; lon<360; lon+=15){               // meridians
+        ctx.beginPath(); let pen=false;
+        for(let lat=-90; lat<=90; lat+=3){
+          const p=project(lat,lon,t), vis = front ? p.z>=0 : p.z<0;
+          if(vis){ pen?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y); pen=true; } else pen=false;
+        }
+        ctx.stroke();
+      }
+    }
+    function draw(t){
+      ctx.clearRect(0,0,W,H);
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
+      const g = ctx.createRadialGradient(cx-R*0.38, cy-R*0.42, R*0.05, cx, cy, R*1.2);
+      g.addColorStop(0,"#f4f9ff"); g.addColorStop(.16,"#d2e2f8"); g.addColorStop(.48,"#7ea8e3");
+      g.addColorStop(.8,"#3c69b6"); g.addColorStop(1,"#143169");
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      lines(t, false, 0.12);   // faint back hemisphere for depth
+      lines(t, true, 0.5);     // bright front grid
+      const s = ctx.createRadialGradient(cx-R*0.4, cy-R*0.45, 0, cx-R*0.4, cy-R*0.45, R*0.95);
+      s.addColorStop(0,"rgba(255,255,255,.85)"); s.addColorStop(.28,"rgba(255,255,255,0)");
+      ctx.fillStyle=s; ctx.fillRect(0,0,W,H);   // specular highlight
+      ctx.restore();
+    }
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let t = 0.4;
+    function loop(){ t += 0.0035; draw(t); requestAnimationFrame(loop); }
+    function start(){ size(); reduce ? draw(0.6) : loop(); }
+    window.addEventListener("resize", ()=>{ size(); if(reduce) draw(0.6); });
+    start();
+  })();
   </script>
 </body>
 </html>
