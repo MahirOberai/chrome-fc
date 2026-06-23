@@ -12,13 +12,13 @@ export default async function handler(req, res) {
 
   const raw = await readRawBody(req);
 
-  // verify + parse. If the SDK helper name differs in your version, the manual
-  // HMAC fallback in the Whop webhook docs works too.
+  // Verify when a webhook secret is configured; otherwise parse (dev).
   let event;
-  try {
-    event = whop.webhooks.unwrap(raw, { headers: req.headers });
-  } catch {
-    return res.status(401).json({ error: "bad signature" });
+  if (process.env.WHOP_WEBHOOK_SECRET) {
+    try { event = whop.webhooks.unwrap(raw, { headers: req.headers }); }
+    catch { return res.status(401).json({ error: "bad signature" }); }
+  } else {
+    try { event = JSON.parse(raw); } catch { return res.status(400).end(); }
   }
 
   // ack immediately, fulfill after (Whop retries on non-2xx)
